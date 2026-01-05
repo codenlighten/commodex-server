@@ -1,11 +1,15 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { PrismaClient } from '@prisma/client';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class PrismaService extends PrismaClient implements OnModuleInit, OnModuleDestroy {
-  constructor() {
-    // Prisma 7 reads configuration from prisma.config.ts and process.env automatically
-    super();
+  constructor(configService: ConfigService) {
+    // Prisma 7: Pass datasourceUrl directly to constructor
+    const databaseUrl = configService.get<string>('DATABASE_URL')!;
+    super({
+      datasourceUrl: databaseUrl,
+    } as any); // Type assertion for Prisma 7 compatibility
   }
 
   async onModuleInit() {
