@@ -1,0 +1,22 @@
+{
+  "deborah": {
+    "name": "Deborah Sale",
+    "address": "0x56f14787DCE5E9227004269ba126548911aaAc07",
+    "privateKey": "0xc67dbd338c61e5fdd97fabab32a91717312543782c9b1a2f8c7b237d5e0a094a"
+  },
+  "gregory": {
+    "name": "Gregory Ward",
+    "address": "0xf49963d00BD90D05eD53b8a8a73b84be6a71dacA",
+    "privateKey": "0xf45bdf554dfd3d6e997ff5d7fcc74667d36c93d37f8f0102383706c577146cbf"
+  },
+  "peter": {
+    "name": "Peter Rivera",
+    "address": "0x8b677dcD43e1d56c78044cf86dc77476DC6A1818",
+    "privateKey": "0x8928034d00e33b265bf9c8e2d7dddac0314b389dbd88b09b98cbf6b83b8e754c"
+  },
+  "gary": {
+    "name": "Gary Krensel",
+    "address": "0x4A1B18bbA4E9102F2Be45C76E40ca81f447FB8f6",
+    "privateKey": "0x7d9884751c53dc2be31a0e3d5c4472cf0e48a4dcf5b5df68dee4f661580cc73b"
+  }
+}
