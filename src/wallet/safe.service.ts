@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ethers } from 'ethers';
-import Safe, { SafeFactory } from '@safe-global/protocol-kit';
+import Safe from '@safe-global/protocol-kit';
 import SafeApiKit from '@safe-global/api-kit';
 
 @Injectable()
@@ -11,9 +11,9 @@ export class SafeService {
   private txServiceUrl: string;
 
   constructor(private configService: ConfigService) {
-    const rpcUrl = this.configService.get<string>('ETHEREUM_RPC_URL');
+    const rpcUrl = this.configService.get<string>('ETHEREUM_RPC_URL')!;
     this.chainId = parseInt(this.configService.get<string>('ETHEREUM_CHAIN_ID', '1'));
-    this.txServiceUrl = this.configService.get<string>('SAFE_TRANSACTION_SERVICE_URL');
+    this.txServiceUrl = this.configService.get<string>('SAFE_TRANSACTION_SERVICE_URL')!;
     
     this.provider = new ethers.JsonRpcProvider(rpcUrl);
   }
@@ -48,7 +48,7 @@ export class SafeService {
    * Get Safe balance for USDT
    */
   async getUSDTBalance(safeAddress: string): Promise<string> {
-    const usdtAddress = this.configService.get<string>('USDT_CONTRACT_ADDRESS');
+    const usdtAddress = this.configService.get<string>('USDT_CONTRACT_ADDRESS')!;
     
     const usdtAbi = [
       'function balanceOf(address owner) view returns (uint256)',

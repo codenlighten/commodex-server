@@ -7,11 +7,9 @@ import {
   verifyRegistrationResponse,
   generateAuthenticationOptions,
   verifyAuthenticationResponse,
+  type RegistrationResponseJSON,
+  type AuthenticationResponseJSON,
 } from '@simplewebauthn/server';
-import type {
-  RegistrationResponseJSON,
-  AuthenticationResponseJSON,
-} from '@simplewebauthn/types';
 
 @Injectable()
 export class AuthService {
@@ -92,11 +90,14 @@ export class AuthService {
       expectedRPID: this.rpID,
     });
 
-    if (!verification.verified || !verification.registrationInfo) {
+    if (!verification.verified) {
       throw new UnauthorizedException('Verification failed');
     }
 
-    const { credentialPublicKey, credentialID, counter } = verification.registrationInfo;
+    const credential = verification.credential;
+    const credentialPublicKey = credential.publicKey;
+    const credentialID = credential.id;
+    const counter = credential.counter;
 
     // Store the passkey
     await this.prisma.passkeyCredential.create({
@@ -132,8 +133,8 @@ export class AuthService {
     const opts = await generateAuthenticationOptions({
       rpID: this.rpID,
       allowCredentials: user.passkeys.map((passkey) => ({
-        id: Buffer.from(passkey.credentialID, 'base64url'),
-        type: 'public-key',
+        id: passkey.credentialID,
+        type: 'public-key' as const,
       })),
       userVerification: 'preferred',
     });
@@ -169,9 +170,9 @@ export class AuthService {
       expectedChallenge,
       expectedOrigin: this.origin,
       expectedRPID: this.rpID,
-      authenticator: {
-        credentialID: Buffer.from(passkey.credentialID, 'base64url'),
-        credentialPublicKey: Buffer.from(passkey.credentialPublicKey, 'base64url'),
+      credential: {
+        id: passkey.credentialID,
+        publicKey: passkey.credentialPublicKey,
         counter: Number(passkey.counter),
       },
     });
@@ -184,7 +185,7 @@ export class AuthService {
     await this.prisma.passkeyCredential.update({
       where: { id: passkey.id },
       data: {
-        counter: BigInt(verification.authenticationInfo.newCounter),
+        counter: BigInt(verification.credential.counter),
         lastUsed: new Date(),
       },
     });

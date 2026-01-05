@@ -14,10 +14,10 @@ export class IndexerService implements OnModuleInit {
     private prisma: PrismaService,
     private configService: ConfigService,
   ) {
-    const rpcUrl = this.configService.get<string>('ETHEREUM_RPC_URL');
+    const rpcUrl = this.configService.get<string>('ETHEREUM_RPC_URL')!;
     this.provider = new ethers.JsonRpcProvider(rpcUrl);
 
-    const usdtAddress = this.configService.get<string>('USDT_CONTRACT_ADDRESS');
+    const usdtAddress = this.configService.get<string>('USDT_CONTRACT_ADDRESS')!;
     const usdtAbi = [
       'event Transfer(address indexed from, address indexed to, uint256 value)',
       'function decimals() view returns (uint8)',
