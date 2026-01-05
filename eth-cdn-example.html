@@ -1,0 +1,472 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ethereum Wallet Pro - CDN</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+
+    <style>
+        :root {
+            --primary: #627eea;
+            --primary-hover: #4e64ba;
+            --bg-gradient: linear-gradient(135deg, #1a1b23 0%, #2b2e4a 100%);
+            --card-bg: #ffffff;
+            --text-main: #2d3748;
+            --text-muted: #718096;
+            --success: #48bb78;
+            --error: #f56565;
+            --border-radius: 12px;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-gradient);
+            color: var(--text-main);
+            min-height: 100vh;
+            padding: 40px 20px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            display: grid;
+            gap: 20px;
+        }
+
+        /* Header */
+        header {
+            text-align: center;
+            color: white;
+            margin-bottom: 20px;
+        }
+        header h1 { font-size: 2rem; font-weight: 700; margin-bottom: 10px; }
+        header .badge {
+            background: var(--success);
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            padding: 25px;
+            box-shadow: var(--shadow);
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+
+        h2 {
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        h2::before {
+            content: '';
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            background: var(--primary);
+            border-radius: 50%;
+            margin-right: 10px;
+        }
+
+        /* Inputs & Validation */
+        .input-group { position: relative; margin-bottom: 15px; }
+        
+        input[type="text"] {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-family: 'JetBrains Mono', monospace; /* Monospace for keys */
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            outline: none;
+        }
+
+        input[type="text"]:focus { border-color: var(--primary); }
+        
+        /* Validation States */
+        input.valid { border-color: var(--success) !important; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2348bb78'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M5 13l4 4L19 7'%3E%3C/path%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; background-size: 20px; }
+        input.invalid { border-color: var(--error) !important; }
+
+        /* Buttons */
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            width: 100%;
+            transition: 0.2s;
+        }
+        .btn-primary:hover { background: var(--primary-hover); transform: translateY(-1px); }
+
+        .btn-group { display: flex; gap: 10px; margin-top: 10px; }
+        .btn-secondary {
+            background: #edf2f7;
+            color: var(--text-main);
+            border: none;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            flex: 1;
+        }
+        .btn-secondary:hover { background: #e2e8f0; }
+
+        /* Output Areas */
+        .output-box {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            display: none; /* Hidden by default */
+        }
+
+        .data-row { margin-bottom: 15px; }
+        .data-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            font-weight: 700;
+            margin-bottom: 5px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .code-block {
+            font-family: 'JetBrains Mono', monospace;
+            background: white;
+            border: 1px solid #edf2f7;
+            padding: 10px;
+            border-radius: 6px;
+            word-break: break-all;
+            font-size: 0.85rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Copy Button */
+        .copy-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-muted);
+            font-size: 1.1rem;
+            padding: 4px;
+        }
+        .copy-btn:hover { color: var(--primary); }
+
+        /* QR Code Area */
+        #qrcode {
+            background: white;
+            padding: 10px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            margin: 15px 0;
+            border: 1px solid #e2e8f0;
+        }
+        #qrcode img { max-width: 100%; }
+
+        /* Network Status Bar */
+        .network-bar {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        .stat-card {
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 15px;
+            border-radius: 12px;
+            color: white;
+            text-align: center;
+            backdrop-filter: blur(5px);
+        }
+        .stat-value { font-size: 1.2rem; font-weight: 700; }
+        .stat-label { font-size: 0.75rem; opacity: 0.8; }
+
+        @media (max-width: 600px) {
+            .network-bar { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <header>
+            <h1>Ethereum Wallet <span class="badge">PRO</span></h1>
+            <p>Secure Client-Side Key Management</p>
+        </header>
+
+        <div class="network-bar">
+            <div class="stat-card">
+                <div class="stat-value" id="gasPrice">-- Gwei</div>
+                <div class="stat-label">Current Gas Price</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="ethPrice">--</div>
+                <div class="stat-label">ETH Price (USD)</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" style="color: #48bb78;">Connected</div>
+                <div class="stat-label">Mainnet Status</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Create New Wallet</h2>
+            <p style="color: var(--text-muted); margin-bottom: 15px; font-size: 0.9rem;">
+                Generates keys locally. Nothing is sent to any server.
+            </p>
+            <button class="btn-primary" onclick="generateWallet()">Generate Secure Wallet</button>
+
+            <div id="newWalletOutput" class="output-box">
+                <div style="text-align: center;">
+                    <div id="qrcode"></div>
+                    <small style="color: var(--text-muted);">Scan to receive funds</small>
+                </div>
+                <hr style="border: 0; border-top: 1px solid #edf2f7; margin: 20px 0;">
+
+                <div class="data-row">
+                    <div class="data-label">ETH Address <span onclick="copyToClipboard('genAddress')" style="cursor:pointer; color:var(--primary)">Copy</span></div>
+                    <div class="code-block" id="genAddress"></div>
+                </div>
+
+                <div class="data-row">
+                    <div class="data-label">Private Key <span style="color: #e53e3e;">(DO NOT SHARE)</span></div>
+                    <div class="code-block" style="filter: blur(3px); transition: 0.3s; cursor: pointer;" onclick="this.style.filter='none'" id="genPrivKey"></div>
+                </div>
+
+                <div class="data-row">
+                    <div class="data-label">Mnemonic Phrase</div>
+                    <div class="code-block" id="genMnemonic"></div>
+                </div>
+
+                <div class="btn-group">
+                    <button class="btn-secondary" onclick="downloadJSON()">💾 Download JSON</button>
+                    <button class="btn-secondary" onclick="downloadTXT()">📄 Save Keys (TXT)</button>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Check Balance & Validate</h2>
+            <div class="input-group">
+                <input type="text" id="checkAddress" placeholder="Enter Ethereum Address (0x...)" oninput="validateInput(this)">
+            </div>
+            <button class="btn-primary" onclick="checkBalance()">Check Holdings</button>
+            
+            <div id="balanceOutput" class="output-box">
+                <div class="data-row">
+                    <div class="data-label">ETH Balance</div>
+                    <div class="code-block" id="valEth">0.0000 ETH</div>
+                </div>
+                <div class="data-row">
+                    <div class="data-label">USDT Balance</div>
+                    <div class="code-block" id="valUsdt">0.00 USDT</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h2>Sign Message</h2>
+            <div class="input-group">
+                <input type="text" id="signMessageInput" placeholder="Enter message to sign...">
+            </div>
+            <button class="btn-primary" onclick="signMsg()">Sign & Verify</button>
+            <div id="signOutput" class="output-box">
+                <div class="data-row">
+                    <div class="data-label">Signature</div>
+                    <div class="code-block" id="signatureResult"></div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/gh/codenlighten/eth-cdn@latest/dist/ethereum-usdt-wallet.js"></script>
+
+    <script>
+        // Store current wallet object
+        let currentWallet = null;
+        let currentWalletData = null;
+
+        // --- 1. Initialization & Utilities ---
+
+        // Fetch Gas/Price on Load (Mocking data for demo reliability without API Key)
+        window.onload = function() {
+            // In a real app, fetch from Etherscan/Infura
+            document.getElementById('gasPrice').innerText = "18 Gwei"; 
+            document.getElementById('ethPrice').innerText = "$2,245.00";
+        };
+
+        function copyToClipboard(elementId) {
+            const text = document.getElementById(elementId).innerText;
+            navigator.clipboard.writeText(text).then(() => {
+                alert("Copied to clipboard!");
+            });
+        }
+
+        // --- 2. Wallet Generation ---
+
+        function generateWallet() {
+            const wallet = new EthereumWallet();
+            const data = wallet.createNewWallet();
+            
+            currentWallet = wallet;
+            currentWalletData = data;
+
+            // UI Updates
+            document.getElementById('newWalletOutput').style.display = 'block';
+            document.getElementById('genAddress').innerText = data.address;
+            document.getElementById('genPrivKey').innerText = data.privateKey;
+            document.getElementById('genMnemonic').innerText = data.mnemonic;
+
+            // Generate QR Code
+            document.getElementById('qrcode').innerHTML = ""; // Clear previous
+            new QRCode(document.getElementById("qrcode"), {
+                text: data.address,
+                width: 128,
+                height: 128
+            });
+        }
+
+        // --- 3. Export Functions ---
+
+        function download(filename, text) {
+            var element = document.createElement('a');
+            element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(text));
+            element.setAttribute('download', filename);
+            element.style.display = 'none';
+            document.body.appendChild(element);
+            element.click();
+            document.body.removeChild(element);
+        }
+
+        function downloadTXT() {
+            if(!currentWalletData) return;
+            const content = `ETH Address: ${currentWalletData.address}\nPrivate Key: ${currentWalletData.privateKey}\nMnemonic: ${currentWalletData.mnemonic}`;
+            download(`eth-keys-${currentWalletData.address.substring(0,6)}.txt`, content);
+        }
+
+        function downloadJSON() {
+            if(!currentWalletData) return;
+            // Simple JSON export (Non-standard encrypted format for demo)
+            const content = JSON.stringify(currentWalletData, null, 2);
+            download(`eth-wallet-backup.json`, content);
+        }
+
+        // --- 4. Validation & Checking ---
+
+        function validateInput(input) {
+            // Regex for basic ETH address
+            const re = /^0x[a-fA-F0-9]{40}$/;
+            if(re.test(input.value)) {
+                input.classList.add('valid');
+                input.classList.remove('invalid');
+            } else {
+                if(input.value.length > 0) {
+                    input.classList.add('invalid');
+                    input.classList.remove('valid');
+                } else {
+                    input.classList.remove('invalid');
+                    input.classList.remove('valid');
+                }
+            }
+        }
+
+        async function checkBalance() {
+            const address = document.getElementById('checkAddress').value;
+            if(!address.startsWith('0x')) { alert("Invalid Address"); return; }
+            
+            const output = document.getElementById('balanceOutput');
+            output.style.display = 'block';
+            output.innerHTML = '<p style="text-align:center">Fetching data...</p>';
+
+            try {
+                // Using a temporary wallet instance for read-only access
+                const viewer = new EthereumWallet();
+                viewer.connectProvider(); 
+
+                const eth = await viewer.getEthBalance(address);
+                const usdt = await viewer.getUsdtBalance(address);
+
+                output.innerHTML = `
+                    <div class="data-row">
+                        <div class="data-label">ETH Balance</div>
+                        <div class="code-block" style="color:var(--primary); font-weight:bold;">${parseFloat(eth).toFixed(6)} ETH</div>
+                    </div>
+                    <div class="data-row">
+                        <div class="data-label">USDT Balance</div>
+                        <div class="code-block" style="color:#27ae60; font-weight:bold;">${parseFloat(usdt).toFixed(2)} USDT</div>
+                    </div>
+                `;
+            } catch(e) {
+                output.innerHTML = `<p style="color:red">Error: ${e.message}</p>`;
+            }
+        }
+
+        // --- 5. Signing ---
+
+        async function signMsg() {
+            if (!currentWallet) {
+                alert('Please Generate or Import a wallet first (Step 1)');
+                return;
+            }
+            const msg = document.getElementById('signMessageInput').value;
+            if(!msg) return;
+
+            try {
+                const sig = await currentWallet.signMessage(msg);
+                const recovered = currentWallet.verifyMessage(msg, sig);
+                
+                const output = document.getElementById('signOutput');
+                output.style.display = 'block';
+                output.innerHTML = `
+                     <div class="data-row">
+                        <div class="data-label">Signed Message</div>
+                        <div class="code-block">${msg}</div>
+                    </div>
+                    <div class="data-row">
+                        <div class="data-label">Cryptographic Signature <span onclick="navigator.clipboard.writeText('${sig}')" style="cursor:pointer; color:var(--primary)">Copy</span></div>
+                        <div class="code-block" style="font-size:0.75rem">${sig}</div>
+                    </div>
+                     <div class="data-row">
+                        <div class="data-label">Recovered Signer</div>
+                        <div class="code-block" style="color:${recovered === currentWalletData.address ? 'green' : 'red'}">${recovered}</div>
+                    </div>
+                `;
+            } catch(e) {
+                alert(e.message);
+            }
+        }
+    </script>
+</body>
+</html>
