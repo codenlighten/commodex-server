@@ -1,0 +1,246 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// User management with passkey support
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String
+  role      UserRole @default(MEMBER)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Passkey credentials
+  passkeys           PasskeyCredential[]
+  
+  // Wallets owned by this user
+  wallets            Wallet[]
+  
+  // Payout requests created
+  payoutRequests     PayoutRequest[]
+  
+  // Approvals given
+  approvals          Approval[]
+  
+  // Audit trail
+  auditEvents        AuditEvent[]
+  
+  @@index([email])
+}
+
+enum UserRole {
+  MEMBER
+  DEAL_MANAGER
+  APPROVER_L1
+  APPROVER_L2
+  COMPLIANCE
+  ADMIN
+  AUDITOR
+}
+
+// WebAuthn passkey credentials
+model PasskeyCredential {
+  id                String   @id @default(uuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  credentialID      String   @unique // base64url encoded
+  credentialPublicKey String // base64url encoded
+  counter           BigInt
+  
+  deviceName        String?
+  createdAt         DateTime @default(now())
+  lastUsed          DateTime @default(now())
+  
+  @@index([userId])
+}
+
+// Wallet management
+model Wallet {
+  id        String     @id @default(uuid())
+  type      WalletType
+  address   String     @unique
+  chain     String     @default("ETH")
+  
+  // Ownership
+  ownerType String     // USER | DEAL | COMPANY
+  ownerId   String?    // Reference to User.id or Deal.id
+  user      User?      @relation(fields: [ownerId], references: [id])
+  
+  // Safe configuration (for multisig wallets)
+  safeOwners String[]  // Array of owner addresses
+  safeThreshold Int?    // Required signatures
+  
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  
+  // Relations
+  ledgerEntries LedgerEntry[]
+  safeTxs       SafeTx[]
+  
+  @@index([address])
+  @@index([ownerType, ownerId])
+}
+
+enum WalletType {
+  MEMBER_DEPOSIT
+  MEMBER_REVENUE
+  DEAL_SAFE
+  DEAL_SPLIT
+  OPERATING_SAFE
+  FEE_SAFE
+  TREASURY
+}
+
+// Double-entry ledger for all transfers
+model LedgerEntry {
+  id        String   @id @default(uuid())
+  walletId  String
+  wallet    Wallet   @relation(fields: [walletId], references: [id])
+  
+  dealId    String?  // Optional reference to a deal
+  
+  asset     String   @default("USDT")
+  direction String   // credit | debit
+  amount    String   // Store as string to avoid precision loss
+  
+  // On-chain reference
+  txHash    String?
+  logIndex  Int?
+  blockNumber BigInt?
+  
+  status    LedgerStatus @default(PENDING)
+  
+  description String?
+  metadata    Json?
+  
+  createdAt DateTime @default(now())
+  
+  @@unique([txHash, logIndex])
+  @@index([walletId])
+  @@index([status])
+  @@index([txHash])
+}
+
+enum LedgerStatus {
+  PENDING
+  CONFIRMED
+  FINAL
+}
+
+// Payout workflow
+model PayoutRequest {
+  id          String            @id @default(uuid())
+  
+  requesterId String
+  requester   User              @relation(fields: [requesterId], references: [id])
+  
+  dealId      String?
+  toAddress   String
+  amount      String
+  purpose     String
+  
+  status      PayoutStatus      @default(DRAFT)
+  
+  // Policy tracking
+  policyChecks Json?
+  
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  
+  // Relations
+  approvals   Approval[]
+  safeTx      SafeTx?
+  
+  @@index([status])
+  @@index([requesterId])
+}
+
+enum PayoutStatus {
+  DRAFT
+  SUBMITTED
+  POLICY_FAILED
+  APPROVED
+  PROPOSED_TO_SAFE
+  SIGNING
+  EXECUTED
+  FAILED
+  CANCELED
+}
+
+// Approval tracking
+model Approval {
+  id              String        @id @default(uuid())
+  
+  payoutRequestId String
+  payoutRequest   PayoutRequest @relation(fields: [payoutRequestId], references: [id])
+  
+  approverId      String
+  approver        User          @relation(fields: [approverId], references: [id])
+  
+  role            UserRole
+  decision        String        // APPROVED | REJECTED
+  comment         String?
+  
+  // Audit metadata
+  ipAddress       String?
+  userAgent       String?
+  
+  createdAt       DateTime      @default(now())
+  
+  @@index([payoutRequestId])
+  @@index([approverId])
+}
+
+// Safe transaction tracking
+model SafeTx {
+  id              String        @id @default(uuid())
+  
+  safeAddress     String
+  wallet          Wallet        @relation(fields: [safeAddress], references: [address])
+  
+  payoutRequestId String?       @unique
+  payoutRequest   PayoutRequest? @relation(fields: [payoutRequestId], references: [id])
+  
+  nonce           BigInt
+  txHash          String?       @unique
+  safeTxHash      String?       @unique
+  safeTxData      Json
+  
+  serviceId       String?       // From Safe Transaction Service
+  status          String        // PENDING | AWAITING_CONFIRMATIONS | EXECUTED | FAILED
+  
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  @@index([safeAddress])
+  @@index([status])
+}
+
+// Immutable audit log
+model AuditEvent {
+  id         String   @id @default(uuid())
+  
+  eventType  String   // USER_CREATED | WALLET_CREATED | PAYOUT_REQUESTED | etc.
+  actor      String   // User ID or system
+  actorUser  User?    @relation(fields: [actor], references: [id])
+  
+  entity     String   // What was affected
+  entityId   String?
+  
+  before     Json?
+  after      Json?
+  
+  metadata   Json?    // IP, user agent, etc.
+  
+  createdAt  DateTime @default(now())
+  
+  @@index([eventType])
+  @@index([actor])
+  @@index([createdAt])
+}
