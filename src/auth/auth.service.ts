@@ -90,11 +90,11 @@ export class AuthService {
       expectedRPID: this.rpID,
     });
 
-    if (!verification.verified) {
+    if (!verification.verified || !verification.registrationInfo) {
       throw new UnauthorizedException('Verification failed');
     }
 
-    const credential = verification.credential;
+    const { credential } = verification.registrationInfo;
     const credentialPublicKey = credential.publicKey;
     const credentialID = credential.id;
     const counter = credential.counter;
@@ -103,7 +103,7 @@ export class AuthService {
     await this.prisma.passkeyCredential.create({
       data: {
         userId: user.id,
-        credentialID: Buffer.from(credentialID).toString('base64url'),
+        credentialID: typeof credentialID === 'string' ? credentialID : Buffer.from(credentialID).toString('base64url'),
         credentialPublicKey: Buffer.from(credentialPublicKey).toString('base64url'),
         counter: BigInt(counter),
         deviceName: deviceName || 'Default Device',
@@ -172,7 +172,7 @@ export class AuthService {
       expectedRPID: this.rpID,
       credential: {
         id: passkey.credentialID,
-        publicKey: passkey.credentialPublicKey,
+        publicKey: new Uint8Array(Buffer.from(passkey.credentialPublicKey, 'base64url')),
         counter: Number(passkey.counter),
       },
     });
@@ -185,7 +185,7 @@ export class AuthService {
     await this.prisma.passkeyCredential.update({
       where: { id: passkey.id },
       data: {
-        counter: BigInt(verification.credential.counter),
+        counter: BigInt(verification.authenticationInfo.newCounter),
         lastUsed: new Date(),
       },
     });
